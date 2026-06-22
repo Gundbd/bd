@@ -80,7 +80,6 @@ def get_collectors_data(country: str = "Все", sort_by: str = "last_name", sor
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Тот же GET-роут для монет, но с фильтрами (чтобы не ломать старый код)
 @app.get("/api/coins-data")
 def get_coins_data(country: str = "Все", metal: str = "Все", sort_by: str = "id", sort_order: str = "ASC"):
     try:
