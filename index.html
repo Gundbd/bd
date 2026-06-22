@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GosMonety</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .filter-panel { background: #ffffff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6; }
+        .stats-badge { font-size: 1.1em; }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark mb-4"><div class="container"><a class="navbar-brand" href="#">🪙 GosMonety</a></div></nav>
+
+<div class="container">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-coins" type="button">Каталог монет</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-collectors" type="button">Коллекционеры и статистика</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-give" type="button">Выдать монету</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-add-coin" type="button">Добавить монету</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-add-col" type="button">Добавить коллекционера</button></li>
+    </ul>
+
+    <div class="tab-content">
+        
+        <div class="tab-pane fade show active" id="tab-coins">
+            <div class="filter-panel">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Страна</label>
+                        <!-- ТУТ БЫЛ ПРОБЕЛ, ИСПРАВЛЕНО НА loadCoins() -->
+                        <select id="f-coin-country" class="form-select form-select-sm" onchange="loadCoins()"><option>Все</option></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Металл</label>
+                        <select id="f-coin-metal" class="form-select form-select-sm" onchange="loadCoins()"><option>Все</option></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Сортировать по</label>
+                        <select id="f-coin-sort" class="form-select form-select-sm" onchange="loadCoins()">
+                            <option value="id">ID</option><option value="denomination">Номинал</option>
+                            <option value="weight">Вес</option><option value="year">Год</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Порядок</label>
+                        <select id="f-coin-order" class="form-select form-select-sm" onchange="loadCoins()">
+                            <option value="ASC">По возрастанию</option><option value="DESC">По убыванию</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-bordered table-hover bg-white">
+                <thead class="table-dark"><tr><th>ID</th><th>Страна</th><th>Металл</th><th>Номинал</th><th>Вес</th><th>Год</th><th>Владелец</th></tr></thead>
+                <tbody id="coinsTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="tab-collectors">
+            <div class="filter-panel">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Фильтр по стране</label>
+                        <select id="f-col-country" class="form-select form-select-sm" onchange="loadCollectors()"><option>Все</option></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Сортировать по</label>
+                        <select id="f-col-sort" class="form-select form-select-sm" onchange="loadCollectors()">
+                            <option value="last_name">Фамилия</option><option value="total_coins">Кол-во монет</option>
+                            <option value="country_name">Страна</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Порядок</label>
+                        <select id="f-col-order" class="form-select form-select-sm" onchange="loadCollectors()">
+                            <option value="ASC">По возрастанию</option><option value="DESC">По убыванию</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-bordered table-hover bg-white">
+                <thead class="table-dark"><tr><th>ID</th><th>ФИО</th><th>Страна</th><th>Email</th><th>Монет в коллекции</th></tr></thead>
+                <tbody id="collectorsTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade" id="tab-give">
+            <div class="row justify-content-center"><div class="col-md-6">
+                <form id="recordForm" class="bg-white p-4 rounded shadow-sm">
+                    <h4 class="mb-3">Оформить выдачу</h4>
+                    <label class="text-muted">Только свободные монеты:</label>
+                    <select name="coin_id" class="form-select mb-2" required><option value="">Монета</option></select>
+                    <select name="collector_id" class="form-select mb-2" required><option value="">Коллекционер</option></select>
+                    <select name="source_id" class="form-select mb-3" required><option value="">Источник</option></select>
+                    <button type="submit" class="btn btn-warning w-100">Выдать</button>
+                </form>
+            </div></div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-add-coin">
+            <div class="row justify-content-center"><div class="col-md-6">
+                <form id="coinForm" class="bg-white p-4 rounded shadow-sm">
+                    <h4 class="mb-3">Новая монета</h4>
+                    <select name="country_id" class="form-select mb-2" required><option value="">Страна</option></select>
+                    <select name="metal_id" class="form-select mb-2" required><option value="">Металл</option></select>
+                    <input type="number" step="0.01" name="denomination" class="form-control mb-2" placeholder="Номинал" required>
+                    <input type="number" step="0.001" name="weight" class="form-control mb-2" placeholder="Вес" required>
+                    <input type="date" name="year" class="form-control mb-2" required>
+                    <textarea name="features" class="form-control mb-3" placeholder="Описание" rows="2"></textarea>
+                    <button type="submit" class="btn btn-primary w-100">Сохранить</button>
+                </form>
+            </div></div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-add-col">
+            <div class="row justify-content-center"><div class="col-md-6">
+                <form id="collectorForm" class="bg-white p-4 rounded shadow-sm">
+                    <h4 class="mb-3">Новый коллекционер</h4>
+                    <input type="text" name="last_name" class="form-control mb-2" placeholder="Фамилия*" required>
+                    <input type="text" name="first_name" class="form-control mb-2" placeholder="Имя*" required>
+                    <input type="text" name="patronomic" class="form-control mb-2" placeholder="Отчество">
+                    <select name="country_id" class="form-select mb-2" required><option value="">Страна*</option></select>
+                    <input type="email" name="email" class="form-control mb-3" placeholder="Email">
+                    <button type="submit" class="btn btn-success w-100">Зарегистрировать</button>
+                </form>
+            </div></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API = ''; 
+    
+    window.onload = () => {
+        loadDicts();
+        loadCoins();
+        loadAvailableCoins();
+        loadCollectors();
+    };
+
+    async function loadDicts() {
+        try {
+            const res = await fetch(`${API}/api/dicts`);
+            const data = await res.json();
+            addFilterOptions('f-coin-country', data.countries);
+            addFilterOptions('f-coin-metal', data.metals);
+            addFilterOptions('f-col-country', data.countries);
+            fillSelect(document.querySelector('#tab-add-coin select[name="country_id"]'), data.countries);
+            fillSelect(document.querySelector('#tab-add-coin select[name="metal_id"]'), data.metals);
+            fillSelect(document.querySelector('#tab-add-col select[name="country_id"]'), data.countries);
+            fillSelect(document.querySelector('#tab-give select[name="collector_id"]'), data.collectors);
+            fillSelect(document.querySelector('#tab-give select[name="source_id"]'), data.sources);
+        } catch(e) { console.error("Dicts error", e); }
+    }
+
+    function addFilterOptions(id, items) {
+        const el = document.getElementById(id);
+        items.forEach(i => { let opt = document.createElement('option'); opt.value = i.name; opt.innerText = i.name; el.appendChild(opt); });
+    }
+
+    function fillSelect(el, items) {
+        if(!el) return;
+        items.forEach(i => { let opt = document.createElement('option'); opt.value = i.id; opt.innerText = i.name; el.appendChild(opt); });
+    }
+
+    async function loadCoins() {
+        const country = document.getElementById('f-coin-country').value;
+        const metal = document.getElementById('f-coin-metal').value;
+        const sort = document.getElementById('f-coin-sort').value;
+        const order = document.getElementById('f-coin-order').value;
+
+        try {
+            const res = await fetch(`${API}/api/coins-data?country=${country}&metal=${metal}&sort_by=${sort}&sort_order=${order}`);
+            // ЗАЩИТА: Если база вернула 500, мы не упадем, а выведем ошибку в таблицу
+            if (!res.ok) {
+                const errText = await res.text();
+                document.getElementById('coinsTableBody').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Ошибка базы данных. Проверь терминал! Ошибка: ${errText}</td></tr>`;
+                return;
+            }
+            const coins = await res.json();
+            
+            document.getElementById('coinsTableBody').innerHTML = coins.map(c => `
+                <tr>
+                    <td>${c.coin_id}</td><td>${c.country_name || '-'}</td><td>${c.metal_name || '-'}</td>
+                    <td>${c.denomination}</td><td>${c.weight}</td>
+                    <td>${c.coin_year != null ? c.coin_year : '-'}</td>
+                    <td>${c.owner_name ? c.owner_name : '<span class="badge bg-success">Свободна</span>'}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            document.getElementById('coinsTableBody').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Сбой фронтенда: ${e.message}
+                </td></tr>`;
+        }
+    }
+
+    async function loadCollectors() {
+        const country = document.getElementById('f-col-country').value;
+        const sort = document.getElementById('f-col-sort').value;
+        const order = document.getElementById('f-col-order').value;
+
+        try {
+            const res = await fetch(`${API}/api/collectors-data?country=${country}&sort_by=${sort}&sort_order=${order}`);
+            
+            // ЗАЩИТА: Если пришла ошибка 500, выводим её прямо в таблицу
+            if (!res.ok) {
+                const errText = await res.text();
+                document.getElementById('collectorsTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger bg-warning">ОШИБКА БАЗЫ: ${errText}</td></tr>`;
+                console.error("Collectors API Error:", errText); // И в консоль тоже кидаем
+                return;
+            }
+
+            const cols = await res.json();
+            
+            // Если массив пустой (нет коллекционеров под фильтр)
+            if (cols.length === 0) {
+                 document.getElementById('collectorsTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted">Коллекционеров не найдено</td></tr>`;
+                 return;
+            }
+
+            document.getElementById('collectorsTableBody').innerHTML = cols.map(c => `
+                <tr>
+                    <td>${c.collector_id}</td>
+                    <td>${c.last_name} ${c.first_name} ${c.patronymic || ''}</td>
+                    <td>${c.country_name}</td>
+                    <td>${c.email || '-'}</td>
+                    <td><span class="badge bg-primary stats-badge">${c.total_coins} шт.</span></td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            // Если упал сам JavaScript
+            document.getElementById('collectorsTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">СБОЙ ФРОНТЕНДА: ${e.message}</td></tr>`;
+        }
+    } 
+
+    async function loadAvailableCoins() {
+        try {
+            const res = await fetch(`${API}/api/available-coins`);
+            if (!res.ok) return;
+            const coins = await res.json();
+            const el = document.querySelector('#tab-give select[name="coin_id"]');
+            el.innerHTML = '<option value="">Выберите монету</option>'; 
+            coins.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c.coin_id; 
+                opt.innerText = `${c.denomination} (${c.metal}, ${c.country})`;
+                el.appendChild(opt);
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    async function postData(url, formId) {
+        const form = document.getElementById(formId);
+        const data = Object.fromEntries(new FormData(form));
+        try {
+            const res = await fetch(`${API}${url}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if(res.ok) { 
+                alert((await res.json()).message); 
+                form.reset(); 
+                loadCoins(); 
+                loadAvailableCoins(); 
+                loadCollectors();
+            } else { 
+                alert('Ошибка: ' + (await res.json()).detail); 
+            }
+        } catch (e) { alert('Сетевая ошибка: ' + e.message); }
+    }
+
+    document.getElementById('coinForm').addEventListener('submit', e => { e.preventDefault(); postData('/api/coins', 'coinForm'); });
+    document.getElementById('collectorForm').addEventListener('submit', e => { e.preventDefault(); postData('/api/collectors', 'collectorForm'); });
+    document.getElementById('recordForm').addEventListener('submit', e => { e.preventDefault(); postData('/api/records', 'recordForm'); });
+
+</script>
+</body>
+</html>
